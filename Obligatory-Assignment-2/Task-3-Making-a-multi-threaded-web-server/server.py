@@ -21,14 +21,17 @@ def handle_client(client_socket, addr):
             #Sending one HTTP header line into socket
             #Also sending the output data to the client
             http_response = f"HTTP/1.1 200 OK\r\n\r\n {outputdata}"
+           
+            # Send HTTP-responsen til klienten
+            client_socket.send(http_response.encode())
+
+            # Send innholdet i den forespurte filen til klienten
+            client_socket.sendall(outputdata.encode())
     except FileNotFoundError:
         #Sending response message for file not found
         http_response = "HTTP/1.1 404 Not Found\r\n\r\nFile Not Found"
-    
-    client_socket.send(http_response.encode())
-
-    # Send the content of the requested file to the client
-    client_socket.sendall(outputdata.encode())
+        
+        client_socket.send(http_response.encode())
 
     # Close client socket
     client_socket.close()
@@ -38,7 +41,7 @@ def main():
     # Create a socket called serverSocket
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Prepare a sever socket
-    server_port = 7777
+    server_port = 7888
     server_ip = '127.0.0.1'
 
     # Establishes a connection between the server's IP address and the specified port number
