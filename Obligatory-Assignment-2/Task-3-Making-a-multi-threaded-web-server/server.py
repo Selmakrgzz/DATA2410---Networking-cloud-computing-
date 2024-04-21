@@ -13,15 +13,14 @@ def handle_client(client_socket, addr):
 
     try:
         #Opening the file
-        f = open(filename[1:])
+        with open(filename[1:], 'r') as f:
+            #Reading the file to be sent back to client
+            outputdata = f.read()
+            print(filename)
 
-        #Reading the file to be sent back to client
-        outputdata = f.read()
-        print(filename)
-
-        #Sending one HTTP header line into socket
-        #Also sending the output data to the client
-        http_response = f"HTTP/1.1 200 OK\r\n\r\n {outputdata.encode()}"
+            #Sending one HTTP header line into socket
+            #Also sending the output data to the client
+            http_response = f"HTTP/1.1 200 OK\r\n\r\n {outputdata}"
     except FileNotFoundError:
         #Sending response message for file not found
         http_response = "HTTP/1.1 404 Not Found\r\n\r\nFile Not Found"

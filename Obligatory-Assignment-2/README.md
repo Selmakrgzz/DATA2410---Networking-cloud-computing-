@@ -11,4 +11,4 @@ The server handles now multiple http requests now by implementing multithreded s
 
 #...Note
 
-For the task 2 and 3 I have only used clientSocket.sendall(outputdata.encode()) and not the for-loop method as given in the shell code because I did encounter some errors and dificulties.
+For the task 2 and 3 I have only used clientSocket.sendall(outputdata.encode()) and not the for-loop method as given in the shell code because I encountered some errors and dificulties.
