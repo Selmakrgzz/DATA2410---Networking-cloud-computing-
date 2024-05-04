@@ -1,6 +1,7 @@
 import socket
 import struct
 import sys
+import random
 import time
 from datetime import datetime
 
@@ -52,7 +53,7 @@ def parse_packet(packet):
     return seq_num, ack_num, flags, data
     
 
-def main(ip, port):
+def main(ip, port, discard):
     #Defining the server socket and address
     server_address = (ip, port)
 
@@ -103,6 +104,10 @@ def main(ip, port):
                 sock.sendto(create_packet(server_seq_num, client_seq_num + 1, SYN | ACK), client_address)
                 print("SYN-ACK packet is sent")
                 #We'll continue again from where we left
+                continue
+            
+            if discard and random.random() < 0.1:  # 10% chance to drop the packet
+                print("Packet dropped")
                 continue
 
             #If flags equals a ACK flag and data is emty
