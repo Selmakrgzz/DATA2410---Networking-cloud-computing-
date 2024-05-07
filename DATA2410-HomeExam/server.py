@@ -51,7 +51,6 @@ def parse_packet(packet):
     #and header extracted from the packet.
     seq_num, ack_num, flags = struct.unpack(header_format, header)
     return seq_num, ack_num, flags, data
-    
 
 def main(ip, port, discard):
     #Defining the server socket and address
@@ -79,6 +78,7 @@ def main(ip, port, discard):
     total_data_received = 0  
     #Initicalize the server sequence number
     server_seq_num = 0
+    image_data = bytearray()
 
     try:
         #An infinite loop where the server continuously waits to receive packets from the client
@@ -145,6 +145,7 @@ def main(ip, port, discard):
                 #only once when the first data is received in the correct order. 
                 #This is crucial for accurately calculating the throughput 
                 #based on the time taken to receive the data.
+                image_data.extend(data)
                 if not start_time:
                     start_time = time.time()  
             else:
@@ -160,6 +161,10 @@ def main(ip, port, discard):
                 #Calculate throughput in Mbps
                 throughput = (total_data_received * 8) / (elapsed_time * 1000000)  
                 print("\nThe throughput is {:.2f} Mbps".format(throughput))
+        if image_data:
+            with open('received_image.jpg', 'wb') as f:
+                f.write(image_data)
+            print("Image has been saved.")
         
         #Close the socket and print connection closure message
         sock.close()
