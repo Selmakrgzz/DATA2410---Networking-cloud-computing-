@@ -47,6 +47,7 @@ def create_packet(seq_num, ack_num, flags, data=b''):
 def parse_packet(packet):
     header = packet[:6]
     data = packet[6:]
+    
     #Unpacking the header based on the specific header format
     #and header extracted from the packet.
     seq_num, ack_num, flags = struct.unpack(header_format, header)
@@ -78,6 +79,7 @@ def main(ip, port, discard):
     total_data_received = 0  
     #Initicalize the server sequence number
     server_seq_num = 0
+    #For storing the image parts
     image_data = bytearray()
 
     try:
@@ -85,8 +87,10 @@ def main(ip, port, discard):
         while True:
             #Receive a packet and client's address from the client
             packet, client_address = sock.recvfrom(1024)
+            
             #Get the current time
             current_time = datetime.now().strftime("%H:%M:%S.%f")  
+            
             #Parsing the received packet and extract client sequence number, flags and data
             client_seq_num, _, flags, data = parse_packet(packet)  
 
@@ -99,10 +103,12 @@ def main(ip, port, discard):
                 #The client has sent a SYN packet to initiate connection
                 #which we have to handle now
                 print("SYN packet is received")
+                
                 #The second step in the 3 way handshake is to send a SYN-ACK packet to the
                 #client to acknowledge and establish a connection 
                 sock.sendto(create_packet(server_seq_num, client_seq_num + 1, SYN | ACK), client_address)
                 print("SYN-ACK packet is sent")
+                
                 #We'll continue again from where we left
                 continue
             
@@ -115,6 +121,7 @@ def main(ip, port, discard):
                 #Handle ACK packet for connection establishment
                 print("ACK packet is received")
                 print("Connection established\n")
+                
                 #We'll continue again from where we left
                 continue
 
@@ -123,9 +130,11 @@ def main(ip, port, discard):
                 #When we receive a FIN flag, it means that the client wants to terminate the connection
                 #and want to make it on a reliable way where the client gives the server message about
                 print("\nFIN packet is received")
+                
                 #Send FIN-ACK packet to acknowledge termination to the client
                 sock.sendto(create_packet(server_seq_num, client_seq_num + 1, ACK | FIN), client_address)
                 print("FIN ACK packet is sent")
+                
                 #Exit the loop to close the connection
                 break  
             
@@ -134,18 +143,24 @@ def main(ip, port, discard):
             if client_seq_num == expected_seq_num:
                 #Handle in-order data packet
                 print("{} -- packet {} is received".format(current_time, client_seq_num))
+                
                 #Sending ACK for the received packet back to the client
                 sock.sendto(create_packet(0, client_seq_num, ACK), client_address)
                 print("{} -- sending ack for the received {}".format(current_time, client_seq_num))
+                
                 #Update expected sequence number for the next packet
                 expected_seq_num += 1  
+
                 #Tracking the total data received so we can calculate the throughput later
                 total_data_received += len(data)  
+
+                #Adding the data received from the packets sent from client
+                image_data.extend(data)
+
                 #This ensures that the start time of the data transfer is recorded 
                 #only once when the first data is received in the correct order. 
                 #This is crucial for accurately calculating the throughput 
                 #based on the time taken to receive the data.
-                image_data.extend(data)
                 if not start_time:
                     start_time = time.time()  
             else:
@@ -161,10 +176,13 @@ def main(ip, port, discard):
                 #Calculate throughput in Mbps
                 throughput = (total_data_received * 8) / (elapsed_time * 1000000)  
                 print("\nThe throughput is {:.2f} Mbps".format(throughput))
+        #Saving the image in the current Application folder
         if image_data:
+            #To handle the received data we'll use
+            #write to add the image-data into a jpg file
             with open('received_image.jpg', 'wb') as f:
                 f.write(image_data)
-            print("Image has been saved.")
+            print("\nImage has been saved.")
         
         #Close the socket and print connection closure message
         sock.close()
